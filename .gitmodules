@@ -1,6 +1,6 @@
 [submodule "lib/libft"]
 	path = lib/libft
-	url = git@github.com:imisumi/libft.git
+	url = https://github.com/imisumi/libft.git
 [submodule "lib/cglm"]
 	path = lib/cglm
 	url = https://github.com/recp/cglm.git
