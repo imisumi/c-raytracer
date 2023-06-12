@@ -6,7 +6,7 @@
 /*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/12 23:50:07 by ichiro           ###   ########.fr       */
+/*   Updated: 2023/06/11 22:38:31 by ichiro           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,15 +21,6 @@ void put_pixel(mlx_image_t* image, uint32_t x, uint32_t y, uint32_t color)
 {
 	if (x >= 0 && x < image->width && y >= 0 && y < image->height)
 		mlx_put_pixel(image, x, y, color);
-}
-
-uint32_t vec4_to_uint_color(vec4 c)
-{
-	uint32_t r = (uint32_t)(255.00 * c[0]);
-	uint32_t g = (uint32_t)(255.00 * c[1]);
-	uint32_t b = (uint32_t)(255.00 * c[2]);
-	uint32_t a = (uint32_t)(255.00 * c[3]);
-	return ft_pixel(r, g, b, a);
 }
 
 void ft_hook(void* param)
@@ -76,16 +67,6 @@ float hit_sphere(vec3 center, float radius, ray r)
 		return (-b - sqrt(discriminant)) / (2.0f * a);
 }
 
-void vec3_min_value(float *v, float value)
-{
-	if (v[0] < value)
-		v[0] = value;
-	if (v[1] < value)
-		v[1] = value;
-	if (v[2] < value)
-		v[2] = value;
-}
-
 void point_at_paramater(ray r, float t, vec3 dest)
 {
 	vec3 tmp;
@@ -95,24 +76,73 @@ void point_at_paramater(ray r, float t, vec3 dest)
 	glm_vec3_add(dest, tmp, dest);
 }
 
-void vec3_to_vec4(vec3 v, float f, vec4 dest)
+// void color(ray r,t_sphere *sphere, vec3 dest)
+// {
+// 	// printf("sphere[0].center = %f, %f, %f\n", sphere[0].center[0], sphere[0].center[1], sphere[0].center[2]);
+// 	// printf("sphere[1].center = %f, %f, %f\n", sphere[1].center[0], sphere[1].center[1], sphere[1].center[2]);
+// 	// exit(0);
+	
+// 	float t = hit_sphere((vec3){0.0, 0.0, -1.0}, 0.5, r);
+// 	// printf("t = %f\n", t);
+// 	// t = 1.0f;
+// 	if (t > 0.0f)
+// 	{
+// 		vec3 n;
+// 		point_at_paramater(r, t, n);
+// 		glm_vec3_sub(n, (vec3){0.0, 0.0, -1.0}, n);
+// 		glm_vec3_normalize(n);
+		
+// 		glm_vec3_scale((vec3){n[0] + 1.0, n[1] + 1.0, n[2] + 1.0}, 0.5, dest);
+// 		return ;
+// 	}
+
+// 	vec3 unit_direction;
+// 	glm_vec3_copy(r[1], unit_direction);
+
+// 	glm_vec3_normalize(unit_direction);
+
+// 	t = 0.5f * (unit_direction[1] + 1.0f);
+
+// 	vec3 color1 = { 1.0, 1.0, 1.0 };
+// 	vec3 color2 = { 0.5, 0.7, 1.0 };
+// 	glm_vec3_scale(color1, (1.0f - t), color1);
+// 	glm_vec3_scale(color2, t, color2);
+// 	glm_vec3_add(color1, color2, color1);
+// 	glm_vec3_copy(color1, dest);
+// }
+
+bool sphere_hit()
+
+bool hitable_hit(ray r, float t_min, float t_max, t_hit_record rec)
 {
-	dest[0] = v[0];
-	dest[1] = v[1];
-	dest[2] = v[2];
-	dest[3] = f;
+	t_hit_record temp_rec;
+	bool hit_anything = false;
+	double closest_so_far = t_max;
+	for (int i = 0; i < 2; i++) {
+		if ()
+	}
 }
 
-void color(ray r, vec3 dest)
+void color(ray r,t_sphere *sphere, vec3 dest)
 {
-	float t = hit_sphere((vec3){0.0, 0.0, -1.0}, 0.5, r);
+	t_hit_record rec;
+	if (hitable_hit(r, 0.0f, MAXFLOAT, rec)) {
+		glm_vec3_scale(rec.normal, 0.5, dest);
+		return ;
+	}
+
+
+
+
+	
+	float t = hit_sphere(sphere[0].center, 0.5, r);
 	// printf("t = %f\n", t);
 	// t = 1.0f;
 	if (t > 0.0f)
 	{
 		vec3 n;
 		point_at_paramater(r, t, n);
-		glm_vec3_sub(n, (vec3){0.0, 0.0, -1.0}, n);
+		glm_vec3_sub(n, sphere[0].center, n);
 		glm_vec3_normalize(n);
 		
 		glm_vec3_scale((vec3){n[0] + 1.0, n[1] + 1.0, n[2] + 1.0}, 0.5, dest);
@@ -140,6 +170,15 @@ void sky(t_data *data)
 	vec3 horizontal = { 4.0, 0.0, 0.0 };
 	vec3 vertical = { 0.0, 2.0, 0.0 };
 	vec3 origin = { 0.0, 0.0, 0.0 };
+
+	t_sphere sphere[2];
+	glm_vec3_copy((vec3){0.0, 0.0, -1.0}, sphere[0].center);
+	sphere[0].radius = 0.5;
+	glm_vec3_copy((vec3){0.0, -100.5, -1.0}, sphere[1].center);
+	sphere[1].radius = 100;
+	
+	// t_hit_record;
+
 	for (int y = data->image->height - 1; y >= 0; y--)
 	{
 		for (int x = 0; x < data->image->width; x++)
@@ -160,7 +199,7 @@ void sky(t_data *data)
 			glm_vec3_add(r[1], temp, r[1]);
 			
 			vec3 col;
-			color(r, col);
+			color(r, sphere, col);
 
 			int ir = (255.00 * col[0]);
 			int ig = (255.00 * col[1]);
@@ -172,147 +211,13 @@ void sky(t_data *data)
 	}
 }
 
-// uint32_t per_pixel(vec2 coord)
-// {
-
-// 	vec3 ray_origin = {0.0f, 0.0f, -1.0f};
-// 	vec3 ray_direction = { coord[0] * ASPECT_RATIO, coord[1], -1.0 };
-// 	float radius = 0.5f;
-// 	// glm_vec3_normalize(ray_direction);
-
-// 	// TODO (bx^2 + by^2)t^2 + (2(axbx + ayby))t + (ax^2 + ay^2 - r^2) = 0
-// 	//? a = ray origin
-// 	//? b = ray direction
-// 	//? r = radius
-// 	//? t = time
-// 	float a = glm_vec3_dot(ray_direction, ray_direction);
-// 	float b = 2.0f * glm_vec3_dot(ray_origin, ray_origin);
-// 	float c = glm_vec3_dot(ray_origin, ray_origin) - (radius * radius);
-
-// 	// TODO Quadratic formula discriminant:
-// 	// TODO b^2 - 4ac
-// 	// TODO (-b +- sqrt(discriminant)) / (2.0f * a)
-
-// 	float discriminant = (b * b) - (4.0f * a * c);
-// 	if (discriminant < 0.0f) {
-// 		vec4 c = {0.0f, 0.0f, 0.0f, 1.0f};
-// 		glm_vec4_clamp(c, 0.0f, 1.0f);
-// 		return vec4_to_uint_color(c);
-// 	}
-// 	else {
-// 		vec4 c = {1.0f, 0.0f, 1.0f, 1.0f};
-// 		glm_vec4_clamp(c, 0.0f, 1.0f);
-// 		return vec4_to_uint_color(c);
-// 	}
-// }
-
-void per_pixel(vec2 coord, vec4 color)
-{
-
-	vec3 ray_origin = {0.0f, 0.0f, 1.0f};
-	vec3 ray_direction = { coord[0] * ASPECT_RATIO, coord[1], -1.0 };
-	float radius = 0.5f;
-	// glm_vec3_normalize(ray_direction);
-
-	// TODO (bx^2 + by^2)t^2 + (2(axbx + ayby))t + (ax^2 + ay^2 - r^2) = 0
-	//? a = ray origin
-	//? b = ray direction
-	//? r = radius
-	//? t = time
-	float a = glm_vec3_dot(ray_direction, ray_direction);
-	float b = 2.0f * glm_vec3_dot(ray_origin, ray_direction);
-	float c = glm_vec3_dot(ray_origin, ray_origin) - (radius * radius);
-
-	// TODO Quadratic formula discriminant:
-	// TODO b^2 - 4ac
-
-
-	float discriminant = (b * b) - (4.0f * a * c);
-	if (discriminant < 0.0f) {
-		glm_vec4_copy((vec4){0, 0, 0, 1}, color);
-		return ;
-	}
-	
-	// TODO (-b +- sqrt(discriminant)) / (2.0f * a)
-	float t0 = (-b + sqrtf(discriminant)) / (2.0f * a);
-	float closest_t = (-b - sqrtf(discriminant)) / (2.0f * a);
-
-	vec3 hitpoint;
-	glm_vec3_scale(ray_direction, closest_t, hitpoint);
-	glm_vec3_add(ray_origin, hitpoint, hitpoint);
-	vec3 normal;
-	glm_vec3_copy(hitpoint, normal);
-	glm_vec3_normalize(normal);
-
-	vec3 light_direction = {-1.0f, -1.0f, -1.0f};
-	glm_vec3_normalize(light_direction);
-	glm_vec3_scale(light_direction, -1.0f, light_direction); //! == cos(anlge)
-	float d = glm_vec3_dot(normal, light_direction);
-	vec3_min_value(normal, 0.0f);
-
-	vec3 sphere_color = {1.0f, 0.0f, 1.0f};
-	// glm_vec3_copy(normal, sphere_color);
-	// glm_vec3_scale(sphere_color, 0.5f, sphere_color);
-	// glm_vec3_adds(sphere_color, 0.5f, sphere_color);
-	vec3_to_vec4(sphere_color, 1.0f, color);
-
-	glm_vec3_scale(color, d, color);
-
-	return ;
-}
-
-void render(t_data *data)
-{
-	for (int y = data->image->height - 1; y >= 0; y--)
-	{
-		for (int x = 0; x < data->image->width; x++)
-		{
-			vec2 coord;
-			coord[0] = (float)x / (float)data->image->width;
-			coord[1] = (float)y / (float)data->image->height;
-			//! from 0 -> 1 to -1 -> 1
-			glm_vec2_scale(coord, 2.0, coord);
-			glm_vec2_sub(coord, (vec2){1.0, 1.0}, coord);
-			
-			vec4 color = {0.0f, 0.0f, 0.0f, 1.0f};
-			per_pixel(coord, color);
-			glm_vec4_clamp(color, 0.0f, 1.0f);
-			// printf("%f %f %f %f\n", color[0], color[1], color[2], color[3]);
-			put_pixel(data->image, x, data->image->height - y, vec4_to_uint_color(color));
-			// exit(0);
-		}
-	}
-}
-
-// void render(t_data *data)
-// {
-// 	for (int y = data->image->height - 1; y >= 0; y--)
-// 	{
-// 		for (int x = 0; x < data->image->width; x++)
-// 		{
-// 			vec2 coord;
-// 			coord[0] = (float)x / (float)data->image->width;
-// 			coord[1] = (float)y / (float)data->image->height;
-// 			//! from 0 -> 1 to -1 -> 1
-// 			glm_vec2_scale(coord, 2.0, coord);
-// 			glm_vec2_sub(coord, (vec2){1.0, 1.0}, coord);
-			
-// 			uint32_t color = per_pixel(coord);
-// 			// glm_vec4_clamp(color, 0.0f, 1.0f);
-// 			put_pixel(data->image, x, data->image->height - y, color);
-// 		}
-// 	}
-// }
-
-
 void	ft_loop_hook(void *param)
 {
 	t_data	*data;
 
 	data = param;
-	render(data);
 	// hello_world(data);
-	// sky(data);
+	sky(data);
 }
 
 void	mlx_actions(t_data *data)
