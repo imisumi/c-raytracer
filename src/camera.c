@@ -3,15 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   camera.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/13 16:19:19 by imisumi          ###   ########.fr       */
+/*   Updated: 2023/06/13 22:58:32 by ichiro           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 // #include "../includes/camera.h"
 #include "../includes/main.h"
+
+int frames = 0;
 
 void mat4_set_value(float *m, float v)
 {
@@ -75,6 +77,9 @@ void recalculate_projection(t_data *d)
 	float rad = glm_rad(d->camera.m_vertical_fov);
 	glm_perspective(rad, ASPECT_RATIO, d->camera.m_near_clip, d->camera.m_far_clip, d->camera.m_projection);
 	glm_mat4_inv(d->camera.m_projection, d->camera.m_inv_projection);
+	
+	// printf("projection: %f %f %f %f\n", d->camera.m_projection[0][0], d->camera.m_projection[0][1], d->camera.m_projection[0][2], d->camera.m_projection[0][3]);
+	// printf("inv_projection: %f %f %f %f\n", d->camera.m_inv_projection[1][0], d->camera.m_inv_projection[1][1], d->camera.m_inv_projection[1][2], d->camera.m_inv_projection[1][3]);
 	// mat4 t;
 	// glm_mat4_mul(d->camera.m_projection, d->camera.m_inv_projection, t);
 	// printf("t: %f %f %f %f\n", t[0][0], t[0][1], t[0][2], t[0][3]);
@@ -105,55 +110,82 @@ void vec4_to_vec3(float *v4, float *v3)
 	v3[2] = v4[2];
 }
 
-// void vec3_to_vec4(float *v3, float *v4, float value)
-// {
-// 	v4[0] = v3[0];
-// 	v4[1] = v3[1];
-// 	v4[2] = v3[2];
-// 	v4[3] = value;
-// }
-
 void recalculate_ray_direction(t_data *d)
 {
-	for (int y = d->image->height - 1; y >= 0; y--)
+	int yy = 0;
+	int height = d->image->height;
+	int width = d->image->width;
+	for (int y = 0; y < height; y++)
 	{
-		for (int x = 0; x < d->image->width; x++)
+		for (int x = 0; x < width; x++)
 		{
 			vec2 coord;
-			coord[0] = (float)x / (float)d->image->width;
-			coord[1] = (float)y / (float)d->image->height;
+			coord[0] = (float)x / (float)width;
+			coord[1] = (float)y / (float)height;
 			//! from 0 -> 1 to -1 -> 1
 			glm_vec2_scale(coord, 2.0, coord);
-			glm_vec2_sub(coord, (vec2){1.0, 1.0}, coord);
+			glm_vec2_sub(coord, (vec2){1.0f, 1.0f}, coord);
 			
 			vec4 target;
 			glm_mat4_mulv(d->camera.m_inv_projection, (vec4){coord[0], coord[1], 1.0f, 1.0f}, target);
-			glm_vec4_normalize(target);
+
 			vec3 tmp;
 			vec4 temp;
 			vec4_to_vec3(target, tmp);
-			glm_vec3_scale(tmp, target[3], tmp);
+
+			glm_vec3_divs(tmp, target[3], tmp);
+			tmp[3] = 0.0f;
 			glm_vec3_normalize(tmp);
-			// vec3_to_vec4(tmp, temp, 0.0f);
+
 			vec3_to_vec4(tmp, 0.0f, temp);
-			glm_mat4_mulv(d->camera.m_inv_view, temp, temp);
-			vec3 ray_dir;
-			vec4_to_vec3(temp, ray_dir);
-			d->camera.ray_direction[y * d->image->width + x][0] = ray_dir[0];
-			d->camera.ray_direction[y * d->image->width + x][1] = ray_dir[1];
-			d->camera.ray_direction[y * d->image->width + x][2] = ray_dir[2];
+			
+			glm_mat4_mulv(d->camera.m_inv_view, temp, d->camera.ray_direction[yy * width + x]);
 		}
+		yy++;
 	}
 }
 
+void quat_angle_axis(float angle, float *axis, float *quat)
+{
+	float a = angle;
+	float s = sinf(a * 0.5f);
+	float c = cosf(a * 0.5f);
+
+	quat[0] = axis[0] * s;
+	quat[1] = axis[1] * s;
+	quat[2] = axis[2] * s;
+	quat[3] = c;
+}
+
+
+void quat_cross(float *q1, float *q2, float *dest)
+{
+	dest[3] = q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2];
+	dest[0] = q1[3] * q2[0] + q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1];
+	dest[1] = q1[3] * q2[1] + q1[1] * q2[3] + q1[2] * q2[0] - q1[0] * q2[2];
+	dest[2] = q1[3] * q2[2] + q1[2] * q2[3] + q1[0] * q2[1] - q1[1] * q2[0];
+	
+}
+
+				// q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
+				// q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y
+				// q1.w * q2.y + q1.y * q2.w + q1.z * q2.x - q1.x * q2.z
+				// q1.w * q2.z + q1.z * q2.w + q1.x * q2.y - q1.y * q2.x
+
+
+
+
 void on_update(t_data *d)
 {
+	printf("%d\n", frames);
+	frames++;
 	bool moved = false;
+	bool rotated = false;
 	vec3 temp;
 	vec3 up_direction = {0.0f, 1.0f, 0.0f};
-	d->camera.m_forward_direction[0] = 0.0f;
-	d->camera.m_forward_direction[1] = 0.0f;
-	d->camera.m_forward_direction[2] = -1.0f;
+	// d->camera.m_forward_direction[0] = 0.0f;
+	// d->camera.m_forward_direction[1] = 0.0f;
+	// d->camera.m_forward_direction[2] = -1.0f;
 	vec3 right_direction;
 	glm_vec3_cross(d->camera.m_forward_direction, up_direction, right_direction);
 
@@ -164,13 +196,16 @@ void on_update(t_data *d)
 	if (mlx_is_key_down(d->mlx, MLX_KEY_W)) {
 		glm_vec3_scale(d->camera.m_forward_direction, speed, temp);
 		glm_vec3_add(d->camera.m_position, temp, d->camera.m_position);
+		// printf("camera: %f %f %f\n", d->camera.m_position[0], d->camera.m_position[1], d->camera.m_position[2]);
 		moved = true;
 	}
 	if (mlx_is_key_down(d->mlx, MLX_KEY_S)) {
 		glm_vec3_scale(d->camera.m_forward_direction, speed, temp);
 		glm_vec3_sub(d->camera.m_position, temp, d->camera.m_position);
+		// printf
 		moved = true;
 	}
+	// d->camera.m_position[0] += 0.05f;
 	if (mlx_is_key_down(d->mlx, MLX_KEY_A)) {
 		glm_vec3_scale(right_direction, speed, temp);
 		glm_vec3_sub(d->camera.m_position, temp, d->camera.m_position);
@@ -193,42 +228,64 @@ void on_update(t_data *d)
 	}
 
 	// TODO: rotation
-	// if (d->camera.mouse_delta[0] != 0 && d->camera.mouse_delta[1] != 0) {
-	// 	float pitch_delta = d->camera.mouse_delta[1] * 0.1f;
-	// 	float yaw_delta = d->camera.mouse_delta[0] * 0.1f;
+	if (mlx_is_key_down(d->mlx, MLX_KEY_UP)) {
+		d->camera.mouse_delta[1] += 10.0f;
+		moved = true;
+	}
+	if (mlx_is_key_down(d->mlx, MLX_KEY_DOWN)) {
+		d->camera.mouse_delta[1] -= 10.0f;
+		moved = true;
+	}
+	if (mlx_is_key_down(d->mlx, MLX_KEY_LEFT)) {
+		d->camera.mouse_delta[0] -= 10.0f;
+		moved = true;
+	}
+	if (mlx_is_key_down(d->mlx, MLX_KEY_RIGHT)) {
+		d->camera.mouse_delta[0] += 10.0f;
+		moved = true;
+	}
 
-	// 	vec3 axis = {right_direction[0], right_direction[1], right_direction[2]};
+	if (d->camera.mouse_delta[0] != 0 || d->camera.mouse_delta[1] != 0) {
+		float pitch_delta = d->camera.mouse_delta[1] * 0.01f;
+		float yaw_delta = d->camera.mouse_delta[0] * 0.01f;
+		versor q;
+		versor temp1;
+		versor temp2;
+		// printf("%f\n\n", -pitch_delta);
+		quat_angle_axis(-pitch_delta, right_direction, temp1);
+		// printf("temp1: %f, %f, %f, %f\n\n", temp1[3], temp1[0], temp1[1], temp1[2]);
+		
+		quat_angle_axis(-yaw_delta, (vec3){0.0f, 1.0f, 0.0f}, temp2);
+		// printf("temp2: %f, %f, %f, %f\n\n", temp2[3], temp2[0], temp2[1], temp2[2]);
+	
+		quat_cross(temp1, temp2, q);
+		// printf("q: %f, %f, %f, %f\n\n", q[3], q[0], q[1], q[2]);
+	
+		glm_quat_normalize(q);
+		// printf("q: %f, %f, %f, %f\n\n", q[3], q[0], q[1], q[2]);
+		glm_quat_rotatev(q, d->camera.m_forward_direction, d->camera.m_forward_direction);
+		// printf("forward: %f, %f, %f\n\n", d->camera.m_forward_direction[0], d->camera.m_forward_direction[1], d->camera.m_forward_direction[2]);
+		d->camera.mouse_delta[0] = 0.0f;
+		d->camera.mouse_delta[1] = 0.0f;
+		moved = true;
+		rotated = true;
+	}
 
-	// 	versor q;
-	// 	glm_quat_axis(q, axis);
-	// 	glm_quat_angle(q, angle);
-	// 	// glm_quat_normalize(q);
-	// }
 	
-	// if (d->camera.mouse_delta[0] != 0 && d->camera.mouse_delta[1] != 0) {
-	// 	float pitchDelta = d->camera.mouse_delta[1] * 0.1f;
-	// 	float yawDelta = d->camera.mouse_delta[0] * 0.1f;
-	
-	// 	vec3 rightDirection = { 1.0f, 0.0f, 0.0f };
-	// 	vec3 forwardDirection = { 0.0f, 0.0f, -1.0f };
-	
-	// 	versor q;
-	// 	glm_vec3_crossn(rightDirection, (vec3){ 0.f, -pitchDelta, 0.f }, q);
-	// 	glm_vec3_crossn((vec3){ 0.f, -yawDelta, 0.f }, q, q);
-	// 	glm_quat_normalize(q);
-	
-	// 	glm_vec3_rotate(q, forwardDirection);
-	// }
-	
-	
+
+	// exit(1);
 
 	
 
-	// moved = true;
+
+	// moved = false;
 	if (moved) {
 		recalculate_view(d);
+		if (rotated) {
+			recalculate_ray_direction(d);
+		}
 		// recalculate_projection(d);
-		recalculate_ray_direction(d);
-		printf("camera position: %f, %f, %f\n", d->camera.m_position[0], d->camera.m_position[1], d->camera.m_position[2]);
+		// printf("camera position: %f, %f, %f\n", d->camera.m_position[0], d->camera.m_position[1], d->camera.m_position[2]);
 	}
+
 }

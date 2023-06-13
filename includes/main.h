@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.h                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/13 14:46:01 by imisumi          ###   ########.fr       */
+/*   Updated: 2023/06/13 22:53:41 by ichiro           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/time.h>
 #include <math.h>
 
 # include "../lib/cglm/build/include/cglm/cglm.h"
@@ -26,8 +27,8 @@
 # include "../lib/libft/includes/libft.h"
 # include "camera.h"
 
-#define WIDTH 1024
-#define HEIGHT 512
+#define WIDTH 1200
+#define HEIGHT 848
 #define ASPECT_RATIO (float)WIDTH / (float)HEIGHT
 #define BPP sizeof(int32_t)
 typedef vec3 ray[2];
@@ -44,6 +45,8 @@ typedef struct	s_sphere
 	vec3		center;
 	float		radius;
 }				t_sphere;
+
+void thread_ray_direction(t_data *d);
 
 void vec3_to_vec4(vec3 v, float f, vec4 dest);
 

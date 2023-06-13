@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+         #
+#    By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/28 00:51:40 by ichiro            #+#    #+#              #
-#    Updated: 2023/06/13 11:30:33 by imisumi          ###   ########.fr        #
+#    Updated: 2023/06/13 22:39:43 by ichiro           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,12 +18,12 @@ CFLAGS = -g
 
 cc = gcc
 
-LFLAGS = -framework Cocoa -framework OpenGl -framework IOKit -lm
+LFLAGS = -framework Cocoa -framework OpenGl -framework IOKit -lm -Ofast -O3
 
 ifeq ($(UNAME), x86_64)
 	LFLAGS += -lglfw3
 else
-	LFLAGS += -lglfw3
+	LFLAGS += -lglfw
 endif
 
 MLX = lib/MLX42/build/libmlx42.a

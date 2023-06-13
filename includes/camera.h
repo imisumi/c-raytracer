@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   camera.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/13 16:19:38 by imisumi          ###   ########.fr       */
+/*   Updated: 2023/06/13 22:36:20 by ichiro           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,10 @@ typedef struct	s_camera
 
 void init_camera(t_data *d);
 void on_update(t_data *d);
+
+void recalculate_view(t_data *d);
+void recalculate_projection(t_data *d);
+void recalculate_ray_direction(t_data *d);
 
 
 
