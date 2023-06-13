@@ -6,7 +6,7 @@
 /*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/14 00:55:45 by ichiro           ###   ########.fr       */
+/*   Updated: 2023/06/14 01:22:31 by ichiro           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -289,10 +289,11 @@ void create_camera(t_data *d, float vertical_fov, float near_clip, float far_cli
 
 void create_sphere(t_data *d)
 {
-	d->scene.number_of_spheres = 2;
+	d->scene.number_of_spheres = 3;
 	d->scene.spheres = malloc(sizeof(t_sphere) * d->scene.number_of_spheres);
 	d->scene.spheres[0] = (t_sphere){{0.0f, 0.0f, 0.0f} , 0.5f, {1.0f, 0.0f, 1.0f}};
 	d->scene.spheres[1] = (t_sphere){{1.0f, 0.0f, -5.0f} , 1.5f, {0.2f, 0.3f, 1.0f}};
+	d->scene.spheres[2] = (t_sphere){{-3.0f, 0.0f, -5.0f} , 3.0f, {0.2f, 1.0f, 0.5f}};
 	// d->scene.spheres[2] = (void *)NULL;
 }
 
