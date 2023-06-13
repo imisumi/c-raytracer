@@ -6,7 +6,7 @@
 /*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/13 14:21:22 by imisumi          ###   ########.fr       */
+/*   Updated: 2023/06/13 16:19:38 by imisumi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ typedef struct	s_camera
 	float m_far_clip;
 
 	vec3 *ray_direction;
+	vec2 mouse_delta;
 
 	vec3 m_position;
 	vec3 m_forward_direction;

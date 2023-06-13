@@ -6,7 +6,7 @@
 /*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/13 14:46:36 by imisumi          ###   ########.fr       */
+/*   Updated: 2023/06/13 16:19:19 by imisumi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,10 +51,6 @@ void mat4_add_mat4(float *m1, float *m2, float v)
 
 void init_camera(t_data *d)
 {
-	// glm_mat4_identity((float *)d->camera.m_projection);
-	// glm_mat4_identity((float *)d->camera.m_view);
-	// glm_mat4_identity((float *)d->camera.m_inv_projection);
-	// glm_mat4_identity((float *)d->camera.m_inv_view);
 	glm_mat4_identity(d->camera.m_projection);
 	glm_mat4_identity(d->camera.m_view);
 	glm_mat4_identity(d->camera.m_inv_projection);
@@ -70,8 +66,10 @@ void init_camera(t_data *d)
 	vec3_set_value((float *)d->camera.m_position, 0.0f);
 	vec3_set_value((float *)d->camera.m_forward_direction, 0.0f);
 
-	
+	d->camera.mouse_delta[0] = 0.0f;
+	d->camera.mouse_delta[1] = 0.0f;
 }
+
 void recalculate_projection(t_data *d)
 {
 	float rad = glm_rad(d->camera.m_vertical_fov);
@@ -159,7 +157,7 @@ void on_update(t_data *d)
 	vec3 right_direction;
 	glm_vec3_cross(d->camera.m_forward_direction, up_direction, right_direction);
 
-	float speed = 0.5f;
+	float speed = 0.25f;
 
 	if (!mlx_is_mouse_down(d->mlx, MLX_MOUSE_BUTTON_RIGHT))
 		return ;
@@ -195,12 +193,42 @@ void on_update(t_data *d)
 	}
 
 	// TODO: rotation
+	// if (d->camera.mouse_delta[0] != 0 && d->camera.mouse_delta[1] != 0) {
+	// 	float pitch_delta = d->camera.mouse_delta[1] * 0.1f;
+	// 	float yaw_delta = d->camera.mouse_delta[0] * 0.1f;
 
-	moved = true;
+	// 	vec3 axis = {right_direction[0], right_direction[1], right_direction[2]};
+
+	// 	versor q;
+	// 	glm_quat_axis(q, axis);
+	// 	glm_quat_angle(q, angle);
+	// 	// glm_quat_normalize(q);
+	// }
+	
+	// if (d->camera.mouse_delta[0] != 0 && d->camera.mouse_delta[1] != 0) {
+	// 	float pitchDelta = d->camera.mouse_delta[1] * 0.1f;
+	// 	float yawDelta = d->camera.mouse_delta[0] * 0.1f;
+	
+	// 	vec3 rightDirection = { 1.0f, 0.0f, 0.0f };
+	// 	vec3 forwardDirection = { 0.0f, 0.0f, -1.0f };
+	
+	// 	versor q;
+	// 	glm_vec3_crossn(rightDirection, (vec3){ 0.f, -pitchDelta, 0.f }, q);
+	// 	glm_vec3_crossn((vec3){ 0.f, -yawDelta, 0.f }, q, q);
+	// 	glm_quat_normalize(q);
+	
+	// 	glm_vec3_rotate(q, forwardDirection);
+	// }
+	
+	
+
+	
+
+	// moved = true;
 	if (moved) {
 		recalculate_view(d);
-		recalculate_projection(d);
+		// recalculate_projection(d);
 		recalculate_ray_direction(d);
+		printf("camera position: %f, %f, %f\n", d->camera.m_position[0], d->camera.m_position[1], d->camera.m_position[2]);
 	}
-	printf("camera position: %f, %f, %f\n", d->camera.m_position[0], d->camera.m_position[1], d->camera.m_position[2]);
 }

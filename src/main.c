@@ -6,7 +6,7 @@
 /*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/13 13:06:24 by imisumi          ###   ########.fr       */
+/*   Updated: 2023/06/13 15:35:58 by imisumi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,13 +173,21 @@ void sky(t_data *data)
 	}
 }
 
-void per_pixel(vec2 coord, vec4 color)
+void trace_ray(ray ray, vec4 color)
 {
+	vec3 ray_origin;
+	vec3 ray_direction;
+	
+	// vec3 ray_origin = {0.0f, 0.0f, 1.0f};
+	// vec3 ray_direction = { coord[0] * ASPECT_RATIO, coord[1], -1.0 };
 
-	vec3 ray_origin = {0.0f, 0.0f, 1.0f};
-	vec3 ray_direction = { coord[0] * ASPECT_RATIO, coord[1], -1.0 };
+	glm_vec3_copy(ray[0], ray_origin);
+	glm_vec3_copy(ray[1], ray_direction);
+
 	float radius = 0.5f;
 	// glm_vec3_normalize(ray_direction);
+
+	
 
 	// TODO (bx^2 + by^2)t^2 + (2(axbx + ayby))t + (ax^2 + ay^2 - r^2) = 0
 	//? a = ray origin
@@ -230,25 +238,47 @@ void per_pixel(vec2 coord, vec4 color)
 
 void render(t_data *data)
 {
+	vec3 ray_origin;
+	glm_vec3_copy(data->camera.m_position, ray_origin);
+	vec3 ray_direction;
+	ray ray;
+	glm_vec3_copy(ray_origin, ray[0]);
 	for (int y = data->image->height - 1; y >= 0; y--)
 	{
 		for (int x = 0; x < data->image->width; x++)
 		{
-			vec2 coord;
-			coord[0] = (float)x / (float)data->image->width;
-			coord[1] = (float)y / (float)data->image->height;
-			//! from 0 -> 1 to -1 -> 1
-			glm_vec2_scale(coord, 2.0, coord);
-			glm_vec2_sub(coord, (vec2){1.0, 1.0}, coord);
+			// vec2 coord;
+			// coord[0] = (float)x / (float)data->image->width;
+			// coord[1] = (float)y / (float)data->image->height;
+			// //! from 0 -> 1 to -1 -> 1
+			// glm_vec2_scale(coord, 2.0, coord);
+			// glm_vec2_sub(coord, (vec2){1.0, 1.0}, coord);
+			glm_vec3_copy(data->camera.ray_direction[x + y * data->image->width], ray_direction);
+			
+			glm_vec3_copy(ray_direction, ray[1]);
 			
 			vec4 color = {0.0f, 0.0f, 0.0f, 1.0f};
-			per_pixel(coord, color);
+			trace_ray(ray, color);
 			glm_vec4_clamp(color, 0.0f, 1.0f);
 			// printf("%f %f %f %f\n", color[0], color[1], color[2], color[3]);
 			put_pixel(data->image, x, data->image->height - y, vec4_to_uint_color(color));
 		}
 	}
 }
+
+void create_camera(t_data *d, float vertical_fov, float near_clip, float far_clip)
+{
+	d->camera.m_vertical_fov = vertical_fov;
+	d->camera.m_near_clip = near_clip;
+	d->camera.m_far_clip = far_clip;
+	glm_vec3_copy((vec3){0.0f, 0.0f, -1.0f}, d->camera.m_forward_direction);
+	glm_vec3_copy((vec3){0.0f, 0.0f, 3.0f}, d->camera.m_position);
+}
+
+// void on_update(t_data *d)
+// {
+	
+// }
 
 void	ft_loop_hook(void *param)
 {
@@ -263,6 +293,11 @@ void	ft_loop_hook(void *param)
 
 void	mlx_actions(t_data *data)
 {
+	create_camera(data, 45.0f, 0.1f, 100.0f);
+	recalculate_view(data);
+	recalculate_projection(data);
+	recalculate_ray_direction(data);
+	
 	mlx_loop_hook(data->mlx, ft_loop_hook, data);
 	mlx_loop_hook(data->mlx, ft_hook, data);
 
