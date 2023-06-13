@@ -6,7 +6,7 @@
 /*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/13 22:58:32 by ichiro           ###   ########.fr       */
+/*   Updated: 2023/06/14 01:19:38 by ichiro           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,11 +115,11 @@ void recalculate_ray_direction(t_data *d)
 	int yy = 0;
 	int height = d->image->height;
 	int width = d->image->width;
+	vec2 coord;
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
 		{
-			vec2 coord;
 			coord[0] = (float)x / (float)width;
 			coord[1] = (float)y / (float)height;
 			//! from 0 -> 1 to -1 -> 1
@@ -134,7 +134,6 @@ void recalculate_ray_direction(t_data *d)
 			vec4_to_vec3(target, tmp);
 
 			glm_vec3_divs(tmp, target[3], tmp);
-			tmp[3] = 0.0f;
 			glm_vec3_normalize(tmp);
 
 			vec3_to_vec4(tmp, 0.0f, temp);
@@ -166,7 +165,6 @@ void quat_cross(float *q1, float *q2, float *dest)
 	dest[2] = q1[3] * q2[2] + q1[2] * q2[3] + q1[0] * q2[1] - q1[1] * q2[0];
 	
 }
-
 				// q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
 				// q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y
 				// q1.w * q2.y + q1.y * q2.w + q1.z * q2.x - q1.x * q2.z
@@ -271,14 +269,6 @@ void on_update(t_data *d)
 		rotated = true;
 	}
 
-	
-
-	// exit(1);
-
-	
-
-
-	// moved = false;
 	if (moved) {
 		recalculate_view(d);
 		if (rotated) {

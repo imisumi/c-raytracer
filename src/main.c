@@ -6,7 +6,7 @@
 /*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/13 22:36:25 by ichiro           ###   ########.fr       */
+/*   Updated: 2023/06/14 00:55:45 by ichiro           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,48 +173,56 @@ void sky(t_data *data)
 	}
 }
 
-void trace_ray(ray ray, vec4 color)
+void trace_ray(ray ray, t_scene scene, vec4 color)
 {
-	vec3 ray_origin;
-	vec3 ray_direction;
-	
-	// vec3 ray_origin = {0.0f, 0.0f, 1.0f};
-	// vec3 ray_direction = { coord[0] * ASPECT_RATIO, coord[1], -1.0 };
 
-	glm_vec3_copy(ray[0], ray_origin);
-	glm_vec3_copy(ray[1], ray_direction);
-
-	float radius = 0.5f;
-	// glm_vec3_normalize(ray_direction);
-
-	
-
-	// TODO (bx^2 + by^2)t^2 + (2(axbx + ayby))t + (ax^2 + ay^2 - r^2) = 0
-	//? a = ray origin
-	//? b = ray direction
-	//? r = radius
-	//? t = time
-	float a = glm_vec3_dot(ray_direction, ray_direction);
-	float b = 2.0f * glm_vec3_dot(ray_origin, ray_direction);
-	float c = glm_vec3_dot(ray_origin, ray_origin) - (radius * radius);
-
-	// TODO Quadratic formula discriminant:
-	// TODO b^2 - 4ac
-
-
-	float discriminant = (b * b) - (4.0f * a * c);
-	if (discriminant < 0.0f) {
+	if (!scene.spheres)
+	{
 		glm_vec4_copy((vec4){.1, .1, .1, 1}, color);
+		printf("no spheres\n");
 		return ;
 	}
 	
-	// TODO (-b +- sqrt(discriminant)) / (2.0f * a)
-	float t0 = (-b + sqrtf(discriminant)) / (2.0f * a);
-	float closest_t = (-b - sqrtf(discriminant)) / (2.0f * a);
+	vec3 origin;
+
+	t_sphere *closest_sphere = NULL;
+	float hit_distance = FLT_MAX;
+	// printf("number of spheres: %d\n", scene.number_of_spheres);
+	for (int i = 0; i < scene.number_of_spheres; i++)
+	{
+		// printf("sphere %d\n", i);
+		t_sphere *sphere = &scene.spheres[i];
+		glm_vec3_sub(ray[0], sphere->position, origin);
+		float a = glm_vec3_dot(ray[1], ray[1]);
+		float b = 2.0f * glm_vec3_dot(origin, ray[1]);
+		float c = glm_vec3_dot(origin, origin) - (sphere->radius * sphere->radius);
+
+		// TODO Quadratic formula discriminant:
+		// TODO b^2 - 4ac
+
+		float discriminant = (b * b) - (4.0f * a * c);
+		if (discriminant < 0.0f)
+			continue;
+
+		// TODO (-b +- sqrt(discriminant)) / (2.0f * a)
+		float closest_t = (-b - sqrtf(discriminant)) / (2.0f * a);
+		// float t0 = (-b + sqrtf(discriminant)) / (2.0f * a);
+		if (closest_t < hit_distance) {
+			hit_distance = closest_t;
+			closest_sphere = sphere;
+		}
+	}
+	// exit(0);
+	if (closest_sphere == NULL) {
+		glm_vec4_copy((vec4){.1, .1, .1, 1}, color);
+		return ;
+	}
+
+	glm_vec3_sub(ray[0], closest_sphere->position, origin);
 
 	vec3 hitpoint;
-	glm_vec3_scale(ray_direction, closest_t, hitpoint);
-	glm_vec3_add(ray_origin, hitpoint, hitpoint);
+	glm_vec3_scale(ray[1], hit_distance, hitpoint);
+	glm_vec3_add(origin, hitpoint, hitpoint);
 	vec3 normal;
 	glm_vec3_copy(hitpoint, normal);
 	glm_vec3_normalize(normal);
@@ -222,16 +230,20 @@ void trace_ray(ray ray, vec4 color)
 	vec3 light_direction = {-1.0f, -1.0f, -1.0f};
 	glm_vec3_normalize(light_direction);
 	glm_vec3_scale(light_direction, -1.0f, light_direction); //! == cos(anlge)
-	float d = glm_vec3_dot(normal, light_direction);
+	float light_intensity = glm_vec3_dot(normal, light_direction);
 	vec3_min_value(normal, 0.0f);
 
 	vec3 sphere_color = {1.0f, 0.0f, 1.0f};
+	
 	// glm_vec3_copy(normal, sphere_color);
 	// glm_vec3_scale(sphere_color, 0.5f, sphere_color);
 	// glm_vec3_adds(sphere_color, 0.5f, sphere_color);
-	vec3_to_vec4(sphere_color, 1.0f, color);
+	
+	// vec3_to_vec4(sphere_color, 1.0f, color);
+	
+	vec3_to_vec4(closest_sphere->albedo, 1.0f, color);
 
-	glm_vec3_scale(color, d, color);
+	glm_vec3_scale(color, light_intensity, color);
 
 	return ;
 }
@@ -258,7 +270,7 @@ void render(t_data *data)
 			glm_vec3_copy(ray_direction, ray[1]);
 			
 			vec4 color = {0.0f, 0.0f, 0.0f, 1.0f};
-			trace_ray(ray, color);
+			trace_ray(ray, data->scene, color);
 			glm_vec4_clamp(color, 0.0f, 1.0f);
 			// printf("%f %f %f %f\n", color[0], color[1], color[2], color[3]);
 			put_pixel(data->image, x, data->image->height - y, vec4_to_uint_color(color));
@@ -273,6 +285,15 @@ void create_camera(t_data *d, float vertical_fov, float near_clip, float far_cli
 	d->camera.m_far_clip = far_clip;
 	glm_vec3_copy((vec3){0.0f, 0.0f, -1.0f}, d->camera.m_forward_direction);
 	glm_vec3_copy((vec3){0.0f, 0.0f, 3.0f}, d->camera.m_position);
+}
+
+void create_sphere(t_data *d)
+{
+	d->scene.number_of_spheres = 2;
+	d->scene.spheres = malloc(sizeof(t_sphere) * d->scene.number_of_spheres);
+	d->scene.spheres[0] = (t_sphere){{0.0f, 0.0f, 0.0f} , 0.5f, {1.0f, 0.0f, 1.0f}};
+	d->scene.spheres[1] = (t_sphere){{1.0f, 0.0f, -5.0f} , 1.5f, {0.2f, 0.3f, 1.0f}};
+	// d->scene.spheres[2] = (void *)NULL;
 }
 
 // void on_update(t_data *d)
@@ -294,6 +315,12 @@ void	ft_loop_hook(void *param)
 void	mlx_actions(t_data *data)
 {
 	create_camera(data, 45.0f, 0.1f, 100.0f);
+	create_sphere(data);
+
+	// printf("%f\n", data->scene.spheres[0].radius);
+	// printf("%f\n", data->scene.spheres[0].albedo[0]);
+
+	// exit(EXIT_SUCCESS);
 	recalculate_view(data);
 	recalculate_projection(data);
 	recalculate_ray_direction(data);
@@ -312,6 +339,12 @@ int main(int argc, const char* argv[])
 	t_data data;
 
 	// Gotta error check this stuff
+	// t_sphere sphere;
+	// printf("%f\n", sphere.radius);
+	// printf("%f\n", sphere.albedo[0]);
+
+
+	// exit(EXIT_SUCCESS);
 	data.mlx = mlx_init(WIDTH, HEIGHT, "Ray Tracer", false);
 	if (!data.mlx)
 		exit(EXIT_FAILURE);
@@ -328,6 +361,7 @@ int main(int argc, const char* argv[])
 	}
 	
 	init_camera(&data);
+
 	mlx_actions(&data);
 
 	mlx_loop_hook(data.mlx, ft_hook, data.mlx);
