@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
+/*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/12 23:50:07 by ichiro           ###   ########.fr       */
+/*   Updated: 2023/06/13 13:06:24 by imisumi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/main.h"
+#include "../includes/camera.h"
 
 uint32_t ft_pixel(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
 {
@@ -172,40 +173,6 @@ void sky(t_data *data)
 	}
 }
 
-// uint32_t per_pixel(vec2 coord)
-// {
-
-// 	vec3 ray_origin = {0.0f, 0.0f, -1.0f};
-// 	vec3 ray_direction = { coord[0] * ASPECT_RATIO, coord[1], -1.0 };
-// 	float radius = 0.5f;
-// 	// glm_vec3_normalize(ray_direction);
-
-// 	// TODO (bx^2 + by^2)t^2 + (2(axbx + ayby))t + (ax^2 + ay^2 - r^2) = 0
-// 	//? a = ray origin
-// 	//? b = ray direction
-// 	//? r = radius
-// 	//? t = time
-// 	float a = glm_vec3_dot(ray_direction, ray_direction);
-// 	float b = 2.0f * glm_vec3_dot(ray_origin, ray_origin);
-// 	float c = glm_vec3_dot(ray_origin, ray_origin) - (radius * radius);
-
-// 	// TODO Quadratic formula discriminant:
-// 	// TODO b^2 - 4ac
-// 	// TODO (-b +- sqrt(discriminant)) / (2.0f * a)
-
-// 	float discriminant = (b * b) - (4.0f * a * c);
-// 	if (discriminant < 0.0f) {
-// 		vec4 c = {0.0f, 0.0f, 0.0f, 1.0f};
-// 		glm_vec4_clamp(c, 0.0f, 1.0f);
-// 		return vec4_to_uint_color(c);
-// 	}
-// 	else {
-// 		vec4 c = {1.0f, 0.0f, 1.0f, 1.0f};
-// 		glm_vec4_clamp(c, 0.0f, 1.0f);
-// 		return vec4_to_uint_color(c);
-// 	}
-// }
-
 void per_pixel(vec2 coord, vec4 color)
 {
 
@@ -229,7 +196,7 @@ void per_pixel(vec2 coord, vec4 color)
 
 	float discriminant = (b * b) - (4.0f * a * c);
 	if (discriminant < 0.0f) {
-		glm_vec4_copy((vec4){0, 0, 0, 1}, color);
+		glm_vec4_copy((vec4){.1, .1, .1, 1}, color);
 		return ;
 	}
 	
@@ -279,40 +246,19 @@ void render(t_data *data)
 			glm_vec4_clamp(color, 0.0f, 1.0f);
 			// printf("%f %f %f %f\n", color[0], color[1], color[2], color[3]);
 			put_pixel(data->image, x, data->image->height - y, vec4_to_uint_color(color));
-			// exit(0);
 		}
 	}
 }
-
-// void render(t_data *data)
-// {
-// 	for (int y = data->image->height - 1; y >= 0; y--)
-// 	{
-// 		for (int x = 0; x < data->image->width; x++)
-// 		{
-// 			vec2 coord;
-// 			coord[0] = (float)x / (float)data->image->width;
-// 			coord[1] = (float)y / (float)data->image->height;
-// 			//! from 0 -> 1 to -1 -> 1
-// 			glm_vec2_scale(coord, 2.0, coord);
-// 			glm_vec2_sub(coord, (vec2){1.0, 1.0}, coord);
-			
-// 			uint32_t color = per_pixel(coord);
-// 			// glm_vec4_clamp(color, 0.0f, 1.0f);
-// 			put_pixel(data->image, x, data->image->height - y, color);
-// 		}
-// 	}
-// }
-
 
 void	ft_loop_hook(void *param)
 {
 	t_data	*data;
 
 	data = param;
+	on_update(data);
+	// sky(data);
 	render(data);
 	// hello_world(data);
-	// sky(data);
 }
 
 void	mlx_actions(t_data *data)
@@ -346,6 +292,7 @@ int main(int argc, const char* argv[])
 		exit(EXIT_FAILURE);
 	}
 	
+	init_camera(&data);
 	mlx_actions(&data);
 
 	mlx_loop_hook(data.mlx, ft_hook, data.mlx);

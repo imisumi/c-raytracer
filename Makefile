@@ -3,16 +3,16 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+         #
+#    By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/28 00:51:40 by ichiro            #+#    #+#              #
-#    Updated: 2023/06/11 04:03:02 by ichiro           ###   ########.fr        #
+#    Updated: 2023/06/13 11:30:33 by imisumi          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = raytracer
 
-HEADER = ../includes/main.h
+HEADER = ./includes/main.h
 
 CFLAGS = -g 
 
@@ -23,7 +23,7 @@ LFLAGS = -framework Cocoa -framework OpenGl -framework IOKit -lm
 ifeq ($(UNAME), x86_64)
 	LFLAGS += -lglfw3
 else
-	LFLAGS += -lglfw
+	LFLAGS += -lglfw3
 endif
 
 MLX = lib/MLX42/build/libmlx42.a
@@ -41,17 +41,18 @@ NC := \033[0m
 
 INC := -I $(INCLUDE_DIR)
 
-SRC = main.c
+SRC = main.c \
+		camera.c
 
 OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRC))
 
 all: $(CGLM) $(MLX) $(LIBFT) $(NAME)
 	@echo "$(GREEN)[Completed]$(NC)"
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(HEADER)
 	@mkdir -p $(dir $@)
 	@echo "$(BLUE)[Compiling $<]$(NC)"
-	@$(cc) $(CFLAGS) $(INC) -I -c -o $@ $<
+	@$(cc) $(CFLAGS) -I -I -c -o $@ $<
 
 $(CGLM):
 	@echo "$(BLUE)[Compiling cglm]$(NC)"
@@ -70,7 +71,7 @@ $(LIBFT):
 	@$(MAKE) -C lib/libft
 
 $(NAME): $(MLX) $(CGLM) $(LIBFT) $(OBJ)
-	@$(cc) $(CFLAGS) $(INC) -I $^ -o $(NAME) $(LFLAGS)
+	$(cc) $(CFLAGS) -I -I $(LFLAGS) $^ -o $(NAME)
 
 run: all
 	./raytracer
