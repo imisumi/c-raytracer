@@ -6,7 +6,7 @@
 /*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/14 11:34:27 by imisumi          ###   ########.fr       */
+/*   Updated: 2023/06/14 18:06:44 by imisumi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,9 @@ void init_camera(t_data *d)
 	d->camera.m_far_clip = 100.0f;
 
 	d->camera.ray_direction = malloc(sizeof(vec3) * WIDTH * HEIGHT);
+	d->camera.accumulation_data = malloc(sizeof(vec4) * WIDTH * HEIGHT);
+	d->camera.frame_index = 1;
+	d->camera.settings.accumulate = true;
 
 	vec3_set_value((float *)d->camera.m_position, 0.0f);
 	vec3_set_value((float *)d->camera.m_forward_direction, 0.0f);
@@ -165,6 +168,11 @@ void quat_cross(float *q1, float *q2, float *dest)
 	dest[0] = q1[3] * q2[0] + q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1];
 	dest[1] = q1[3] * q2[1] + q1[1] * q2[3] + q1[2] * q2[0] - q1[0] * q2[2];
 	dest[2] = q1[3] * q2[2] + q1[2] * q2[3] + q1[0] * q2[1] - q1[1] * q2[0];
+
+	// dest[3] = q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2];
+	// dest[0] = q1[3] * q2[0] + q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1];
+	// dest[1] = q1[3] * q2[1] + q1[1] * q2[3] + q1[2] * q2[0] - q1[0] * q2[2];
+	// dest[2] = q1[3] * q2[2] + q1[2] * q2[3] + q1[0] * q2[1] - q1[1] * q2[0];
 	
 }
 				// q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
@@ -272,6 +280,7 @@ void on_update(t_data *d)
 	}
 
 	if (moved) {
+		d->camera.frame_index = 1;
 		recalculate_view(d);
 		if (rotated) {
 			recalculate_ray_direction(d);

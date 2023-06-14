@@ -6,7 +6,7 @@
 /*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/14 12:04:29 by imisumi          ###   ########.fr       */
+/*   Updated: 2023/06/14 16:06:19 by imisumi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,11 @@
 # include "main.h"
 
 typedef struct s_data t_data;
+
+typedef struct	s_settings
+{
+	bool accumulate;
+}				t_settings;
 
 typedef struct	s_camera
 {
@@ -29,6 +34,9 @@ typedef struct	s_camera
 	float m_far_clip;
 
 	vec3 *ray_direction;
+	vec4 *accumulation_data;
+	int frame_index;
+	t_settings settings;
 	vec2 mouse_delta;
 
 	vec3 m_position;
