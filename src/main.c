@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
+/*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/14 01:22:31 by ichiro           ###   ########.fr       */
+/*   Updated: 2023/06/14 10:31:46 by imisumi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -317,6 +317,7 @@ void	mlx_actions(t_data *data)
 {
 	create_camera(data, 45.0f, 0.1f, 100.0f);
 	create_sphere(data);
+	
 
 	// printf("%f\n", data->scene.spheres[0].radius);
 	// printf("%f\n", data->scene.spheres[0].albedo[0]);
@@ -325,6 +326,9 @@ void	mlx_actions(t_data *data)
 	recalculate_view(data);
 	recalculate_projection(data);
 	recalculate_ray_direction(data);
+
+	
+	// exit(EXIT_SUCCESS);
 	
 	mlx_loop_hook(data->mlx, ft_loop_hook, data);
 	mlx_loop_hook(data->mlx, ft_hook, data);

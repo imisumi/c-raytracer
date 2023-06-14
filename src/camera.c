@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   camera.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
+/*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/14 01:19:38 by ichiro           ###   ########.fr       */
+/*   Updated: 2023/06/14 11:34:27 by imisumi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,7 +109,6 @@ void vec4_to_vec3(float *v4, float *v3)
 	v3[1] = v4[1];
 	v3[2] = v4[2];
 }
-
 void recalculate_ray_direction(t_data *d)
 {
 	int yy = 0;
@@ -125,6 +124,7 @@ void recalculate_ray_direction(t_data *d)
 			//! from 0 -> 1 to -1 -> 1
 			glm_vec2_scale(coord, 2.0, coord);
 			glm_vec2_sub(coord, (vec2){1.0f, 1.0f}, coord);
+			// printf("check\n");
 			
 			vec4 target;
 			glm_mat4_mulv(d->camera.m_inv_projection, (vec4){coord[0], coord[1], 1.0f, 1.0f}, target);
@@ -138,7 +138,9 @@ void recalculate_ray_direction(t_data *d)
 
 			vec3_to_vec4(tmp, 0.0f, temp);
 			
-			glm_mat4_mulv(d->camera.m_inv_view, temp, d->camera.ray_direction[yy * width + x]);
+			glm_mat4_mulv(d->camera.m_inv_view, temp, temp);
+
+			vec4_to_vec3(temp, d->camera.ray_direction[yy * width + x]);
 		}
 		yy++;
 	}
