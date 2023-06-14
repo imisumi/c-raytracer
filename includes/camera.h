@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   camera.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ichiro <ichiro@student.42.fr>              +#+  +:+       +#+        */
+/*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/13 22:36:20 by ichiro           ###   ########.fr       */
+/*   Updated: 2023/06/14 12:04:29 by imisumi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,15 @@ typedef struct	s_camera
 	vec3 m_position;
 	vec3 m_forward_direction;
 }				t_camera;
+
+typedef struct s_hit_payload
+{
+	float hit_distance;
+	vec3 world_position;
+	vec3 world_normal;
+	int object_index;
+	
+} t_hit_payload;
 
 void init_camera(t_data *d);
 void on_update(t_data *d);

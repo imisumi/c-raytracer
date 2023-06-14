@@ -6,7 +6,7 @@
 /*   By: imisumi <imisumi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 02:06:12 by ichiro            #+#    #+#             */
-/*   Updated: 2023/06/14 10:31:46 by imisumi          ###   ########.fr       */
+/*   Updated: 2023/06/14 13:45:40 by imisumi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,19 +173,70 @@ void sky(t_data *data)
 	}
 }
 
-void trace_ray(ray ray, t_scene scene, vec4 color)
+t_hit_payload miss(ray ray)
+{
+	t_hit_payload payload;
+	payload.hit_distance = -1.0f;
+	return payload;
+}
+
+t_hit_payload closest_hit(ray ray, t_scene scene, float hit_distance, int object_index)
+{
+	t_hit_payload payload;
+	payload.hit_distance = hit_distance;
+	payload.object_index = object_index;
+	
+
+	t_sphere *closest_sphere = &scene.spheres[object_index];
+	
+	vec3 origin;
+	glm_vec3_sub(ray[0], closest_sphere->position, origin);
+
+	vec3 hitpoint;
+	glm_vec3_scale(ray[1], hit_distance, hitpoint);
+	glm_vec3_add(origin, hitpoint, payload.world_position);
+
+	glm_vec3_copy(payload.world_position, payload.world_normal);
+	glm_vec3_normalize(payload.world_normal);
+
+	glm_vec3_add(payload.world_position, closest_sphere->position, payload.world_position);
+
+	return payload;
+
+	// vec3 light_direction = {-1.0f, -1.0f, -1.0f};
+	// glm_vec3_normalize(light_direction);
+	// glm_vec3_scale(light_direction, -1.0f, light_direction); //! == cos(anlge)
+	// float light_intensity = glm_vec3_dot(payload.world_normal, light_direction);
+	// vec3_min_value(payload.world_normal, 0.0f);
+
+	// vec3 sphere_color = {1.0f, 0.0f, 1.0f};
+	
+	// // glm_vec3_copy(normal, sphere_color);
+	// // glm_vec3_scale(sphere_color, 0.5f, sphere_color);
+	// // glm_vec3_adds(sphere_color, 0.5f, sphere_color);
+	
+	// // vec3_to_vec4(sphere_color, 1.0f, color);
+	
+	// vec3_to_vec4(closest_sphere->albedo, 1.0f, color);
+
+	// glm_vec3_scale(color, light_intensity, color);
+
+	// return ;
+}
+
+t_hit_payload trace_ray(ray ray, t_scene scene, vec4 color)
 {
 
-	if (!scene.spheres)
-	{
-		glm_vec4_copy((vec4){.1, .1, .1, 1}, color);
-		printf("no spheres\n");
-		return ;
-	}
+	// if (!scene.spheres)
+	// {
+	// 	glm_vec4_copy((vec4){.1, .1, .1, 1}, color);
+	// 	printf("no spheres\n");
+	// 	return ;
+	// }
 	
 	vec3 origin;
 
-	t_sphere *closest_sphere = NULL;
+	int closest_sphere = -1;
 	float hit_distance = FLT_MAX;
 	// printf("number of spheres: %d\n", scene.number_of_spheres);
 	for (int i = 0; i < scene.number_of_spheres; i++)
@@ -209,39 +260,80 @@ void trace_ray(ray ray, t_scene scene, vec4 color)
 		// float t0 = (-b + sqrtf(discriminant)) / (2.0f * a);
 		if (closest_t < hit_distance) {
 			hit_distance = closest_t;
-			closest_sphere = sphere;
+			closest_sphere = (int)i;
 		}
 	}
 	// exit(0);
-	if (closest_sphere == NULL) {
+	if (closest_sphere < 0) {
+		return miss(ray);
+	}
+
+	return closest_hit(ray, scene, hit_distance, closest_sphere);
+
+	// glm_vec3_sub(ray[0], closest_sphere->position, origin);
+
+	// vec3 hitpoint;
+	// glm_vec3_scale(ray[1], hit_distance, hitpoint);
+	// glm_vec3_add(origin, hitpoint, hitpoint);
+	// vec3 normal;
+	// glm_vec3_copy(hitpoint, normal);
+	// glm_vec3_normalize(normal);
+
+	// vec3 light_direction = {-1.0f, -1.0f, -1.0f};
+	// glm_vec3_normalize(light_direction);
+	// glm_vec3_scale(light_direction, -1.0f, light_direction); //! == cos(anlge)
+	// float light_intensity = glm_vec3_dot(normal, light_direction);
+	// vec3_min_value(normal, 0.0f);
+
+	// vec3 sphere_color = {1.0f, 0.0f, 1.0f};
+	
+	// // glm_vec3_copy(normal, sphere_color);
+	// // glm_vec3_scale(sphere_color, 0.5f, sphere_color);
+	// // glm_vec3_adds(sphere_color, 0.5f, sphere_color);
+	
+	// // vec3_to_vec4(sphere_color, 1.0f, color);
+	
+	// vec3_to_vec4(closest_sphere->albedo, 1.0f, color);
+
+	// glm_vec3_scale(color, light_intensity, color);
+
+	// return ;
+}
+
+void per_pixel(t_data *d, int x, int y, vec4 color)
+{
+	ray ray;
+	glm_vec3_copy(d->camera.m_position, ray[0]);
+	glm_vec3_copy(d->camera.ray_direction[x + y * d->image->width], ray[1]);
+
+	t_hit_payload payload = trace_ray(ray, d->scene, color);
+	if (payload.hit_distance < 0) {
 		glm_vec4_copy((vec4){.1, .1, .1, 1}, color);
 		return ;
 	}
 
-	glm_vec3_sub(ray[0], closest_sphere->position, origin);
-
-	vec3 hitpoint;
-	glm_vec3_scale(ray[1], hit_distance, hitpoint);
-	glm_vec3_add(origin, hitpoint, hitpoint);
-	vec3 normal;
-	glm_vec3_copy(hitpoint, normal);
-	glm_vec3_normalize(normal);
-
 	vec3 light_direction = {-1.0f, -1.0f, -1.0f};
 	glm_vec3_normalize(light_direction);
 	glm_vec3_scale(light_direction, -1.0f, light_direction); //! == cos(anlge)
-	float light_intensity = glm_vec3_dot(normal, light_direction);
-	vec3_min_value(normal, 0.0f);
+	float light_intensity = glm_vec3_dot(payload.world_normal, light_direction);
+	vec3_min_value(payload.world_normal, 0.0f);
 
 	vec3 sphere_color = {1.0f, 0.0f, 1.0f};
 	
+	t_scene scene = d->scene;
+	
+	t_sphere *sphere = &scene.spheres[payload.object_index];
+
+	
+	// t_sphere *sphere = &d.scene->spheres[payload.object_index];
+	// d->scene->sphere[payload.object_index];
 	// glm_vec3_copy(normal, sphere_color);
 	// glm_vec3_scale(sphere_color, 0.5f, sphere_color);
 	// glm_vec3_adds(sphere_color, 0.5f, sphere_color);
 	
 	// vec3_to_vec4(sphere_color, 1.0f, color);
 	
-	vec3_to_vec4(closest_sphere->albedo, 1.0f, color);
+	vec3_to_vec4(sphere->albedo, 1.0f, color);
 
 	glm_vec3_scale(color, light_intensity, color);
 
@@ -250,27 +342,30 @@ void trace_ray(ray ray, t_scene scene, vec4 color)
 
 void render(t_data *data)
 {
-	vec3 ray_origin;
-	glm_vec3_copy(data->camera.m_position, ray_origin);
-	vec3 ray_direction;
-	ray ray;
-	glm_vec3_copy(ray_origin, ray[0]);
+	vec4 color = {0.0f, 0.0f, 0.0f, 1.0f};
+	// vec3 ray_origin;
+	// glm_vec3_copy(data->camera.m_position, ray_origin);
+	// vec3 ray_direction;
+	// ray ray;
+	// glm_vec3_copy(ray_origin, ray[0]);
+	// glm_vec3_copy(data->camera.ray_direction[x + y * data->image->width], ray[1]);
 	for (int y = data->image->height - 1; y >= 0; y--)
 	{
 		for (int x = 0; x < data->image->width; x++)
 		{
+
+			per_pixel(data, x, y, color);
 			// vec2 coord;
 			// coord[0] = (float)x / (float)data->image->width;
 			// coord[1] = (float)y / (float)data->image->height;
 			// //! from 0 -> 1 to -1 -> 1
 			// glm_vec2_scale(coord, 2.0, coord);
 			// glm_vec2_sub(coord, (vec2){1.0, 1.0}, coord);
-			glm_vec3_copy(data->camera.ray_direction[x + y * data->image->width], ray_direction);
 			
-			glm_vec3_copy(ray_direction, ray[1]);
 			
-			vec4 color = {0.0f, 0.0f, 0.0f, 1.0f};
-			trace_ray(ray, data->scene, color);
+			// trace_ray(data, data->scene, color);
+			// per_pixel(color);
+				
 			glm_vec4_clamp(color, 0.0f, 1.0f);
 			// printf("%f %f %f %f\n", color[0], color[1], color[2], color[3]);
 			put_pixel(data->image, x, data->image->height - y, vec4_to_uint_color(color));
